@@ -48,9 +48,6 @@ services:
       - type: bind
         source: /mnt/dobs-volume
         target: /var/lib/mysql
-      - type: bind
-        source: ./docker/c-crypto-backend-apache/httpd.conf
-        target: /usr/local/apache2/conf/httpd.conf
     logging:
       options:
         max-size: "10m"
