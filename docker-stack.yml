@@ -46,7 +46,7 @@ services:
       start_period: 60s
     volumes:
       - type: bind
-        source: /mnt/dobs-volume
+        source: /mnt/dobs-volume/mysql
         target: /var/lib/mysql
     logging:
       options:

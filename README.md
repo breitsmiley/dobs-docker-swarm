@@ -70,6 +70,7 @@ https://www.digitalocean.com/docs/volumes/how-to/format-and-mount/
 sudo mkdir -p /mnt/dobs-volume
 echo '/dev/disk/by-id/scsi-0DO_Volume_volume-sfo2-01-part1 /mnt/dobs-volume ext4 defaults,nofail,discard 0 2' | sudo tee -a /etc/fstab
 sudo mount -a
+mkdir -p /mnt/dobs-volume/mysql
 ```
 
 
