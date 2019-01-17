@@ -1,0 +1,3 @@
+[mysqld]
+default-time-zone='+00:00'
+event_scheduler=ON

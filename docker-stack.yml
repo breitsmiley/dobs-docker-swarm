@@ -1,0 +1,92 @@
+version: '3.7'
+
+# SWARM Configs
+#================================================
+configs:
+  F-dobsMysqlDb-mysql.cnf-v1:
+    file: ./docker/dobs-mysql-db/mysql.cnf
+
+  # HEALTHCHECKS
+  F-healthcheck-mysql-v1:
+    file: ./docker/_swarm/healthcheck/app_mysql_healthcheck.sh
+
+
+# SWARM Secrets
+#================================================
+secrets:
+  dobsMysqlDb-MYSQL_DATABASE-v1:
+    external: true
+  dobsMysqlDb-MYSQL_USER-v1:
+    external: true
+  dobsMysqlDb-MYSQL_PASSWORD-v1:
+    external: true
+  dobsMysqlDb-MYSQL_ROOT_PASSWORD-v1:
+    external: true
+
+services:
+
+  dobs-mysql-db:
+    image: mysql:5.7.24
+    environment:
+      - MYSQL_DATABASE_FILE=/run/secrets/dobsMysqlDb-MYSQL_DATABASE
+      - MYSQL_USER_FILE=/run/secrets/dobsMysqlDb-MYSQL_USER
+      - MYSQL_PASSWORD_FILE=/run/secrets/dobsMysqlDb-MYSQL_PASSWORD
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/dobsMysqlDb-MYSQL_ROOT_PASSWORD
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+#          - node.role == manager
+    healthcheck:
+      test: ["CMD", "app_mysql_healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    volumes:
+
+      - type: bind
+        source: ./docker/c-crypto-backend-apache/httpd.conf
+        target: /usr/local/apache2/conf/httpd.conf
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+    configs:
+      - source:  F-dobsMysqlDb-mysql.cnf-v1
+        target: /etc/mysql/conf.d/mysql.cnf
+        mode: 0444
+      - source:  F-healthcheck-mysql-v1
+        target: /usr/local/bin/app_mysql_healthcheck
+        mode: 0555
+    secrets:
+      - source: dobsMysqlDb-MYSQL_DATABASE-v1
+        target: dobsMysqlDb-MYSQL_DATABASE
+        mode: 0444
+      - source: dobsMysqlDb-MYSQL_USER-v1
+        target: dobsMysqlDb-MYSQL_USER
+        mode: 0444
+      - source: dobsMysqlDb-MYSQL_PASSWORD-v1
+        target: dobsMysqlDb-MYSQL_PASSWORD
+        mode: 0444
+      - source: dobsMysqlDb-MYSQL_ROOT_PASSWORD-v1
+        target: dobsMysqlDb-MYSQL_ROOT_PASSWORD
+        mode: 0444
+
+  dobs-pma:
+    image: phpmyadmin/phpmyadmin:4.7
+    environment:
+      - MYSQL_USER=pma
+      - MYSQL_PASSWORD=pma
+      - MYSQL_ROOT_PASSWORD=root
+      - PMA_HOST=dobs-mysql-db
+    deploy:
+      replicas: 1
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+    ports:
+      - "8000:80"
+
